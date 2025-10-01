@@ -2,6 +2,7 @@
 
 namespace TH\Maybe\Tests\Unit\Option;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Assert;
 use PHPUnit\Framework\TestCase;
 use TH\Maybe\Option;
@@ -9,14 +10,14 @@ use TH\Maybe\Option;
 final class MapTest extends TestCase
 {
     /**
-     * @dataProvider mapMatrix
      * @template T
      * @template U
      * @param Option<T> $option
      * @param U $mapResult
      * @param Option<U> $expected
      * @param array<T> $expectedCalls
-     */
+    */
+    #[DataProvider('mapMatrix')]
     public function testMap(Option $option, mixed $mapResult, Option $expected, array $expectedCalls): void
     {
         $calls = [];
@@ -59,7 +60,6 @@ final class MapTest extends TestCase
     }
 
     /**
-     * @dataProvider mapOrMatrix
      * @template T
      * @template U
      * @param Option<T> $option
@@ -67,7 +67,8 @@ final class MapTest extends TestCase
      * @param U $default
      * @param U $expected
      * @param array<T> $expectedCalls
-     */
+    */
+    #[DataProvider('mapOrMatrix')]
     public function testMapOr(
         Option $option,
         mixed $mapResult,

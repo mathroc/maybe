@@ -2,6 +2,7 @@
 
 namespace TH\Maybe\Tests\Unit\Option;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Assert;
 use PHPUnit\Framework\TestCase;
 use TH\Maybe\Option;
@@ -9,11 +10,11 @@ use TH\Maybe\Option;
 final class FilterTest extends TestCase
 {
     /**
-     * @dataProvider filterMatrix
      * @template T
      * @param Option<T> $option
      * @param array<T> $expectedCalls
-     */
+    */
+    #[DataProvider('filterMatrix')]
     public function testFilter(Option $option, bool $filterResult, bool $expectNone, array $expectedCalls): void
     {
         $calls = [];
