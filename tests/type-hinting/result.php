@@ -45,8 +45,7 @@ function test_is_ok(Result $result): int
         return $result->unwrap();
     }
 
-    // 🫥 phpstan: blind spot — reports nothing here (mago flags the dead return, psalm the undocumented throw)
-    // 🫥 mago: blind spot — unhandled-thrown-type is ignored for tests/ in mago.toml, so it misses the undocumented throw psalm catches
+    // 🫥 phpstan: blind spot — misses that unwrap() always throws here (mago flags the dead return, psalm the undocumented throw)
     // @mago-expect analysis:impossible-type-comparison 🎯 `$result` of type `Err<int>` can never be `Ok`
     // @mago-expect analysis:never-return 🎯
     /**
