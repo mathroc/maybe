@@ -7,16 +7,16 @@ message = '''Right operand in `==` comparison might be `null` (type `('U.th\mayb
 count = 1
 
 [[issues]]
-file = "src/functions/option.php"
-code = "unfulfilled-expect"
-message = "This pragma was not used and may be removed."
-count = 1
-
-[[issues]]
 file = "tests/Constraint/HasBeen.php"
 code = "mixed-assignment"
 message = "Assigning `mixed` type to a variable may lead to unexpected behavior."
 count = 2
+
+[[issues]]
+file = "tests/Helpers/IgnoreUnusedResults.php"
+code = "mixed-assignment"
+message = "Assigning `mixed` type to a variable may lead to unexpected behavior."
+count = 1
 
 [[issues]]
 file = "tests/Provider/Options.php"

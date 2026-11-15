@@ -48,8 +48,7 @@ function fromValue(mixed $value, mixed $noneValue = null, bool $strict = true): 
 {
     $same = $strict
         ? $value === $noneValue
-        // @mago-expect analysis:mixed-operand -- `fromValue()` compares a template value against mixed
-        // @mago-expect analysis:possibly-null-operand
+        // @mago-expect analysis:possibly-null-operand -- `fromValue()` compares a template value against mixed
         // @mago-expect lint:identity-comparison
         : $value == $noneValue;
 

@@ -197,7 +197,6 @@ function collect(iterable $results, bool $drain = false): Result
 
     foreach ($results as $result) {
         if (!$result->isErr()) {
-            // @mago-ignore analysis:unhandled-thrown-type -- unwrap() cannot throw: $result is not Err
             $values[] = $result->unwrap();
 
             continue;
