@@ -9,6 +9,7 @@
 
 namespace TH\Maybe\Tests\TypeHinting\result;
 
+use TH\Maybe\Option;
 use TH\Maybe\Result;
 
 /**
@@ -66,4 +67,95 @@ function test_is_none(Result $result): string
 
     /** @psalm-suppress MissingThrowsDocblock 🙈 Throwable is thrown but not caught - please either catch or add a @throws annotation */
     return (string) $result->unwrap();
+}
+
+/**
+ * @return Result<int,\RuntimeException|string>
+ * @throws \Throwable
+ */
+function test_trap_to_err(): Result
+{
+    return Result\trap(
+        static fn (): int => \random_int(min: 0, max: 10),
+        exceptionClass: \RuntimeException::class,
+        toErr: static fn (int $i): Option => $i > 5 ? Option\some('too big') : Option\none(),
+    );
+}
+
+/**
+ * @return Result<int|false,\RuntimeException|string>
+ */
+function test_ify_to_err(): Result
+{
+    $strtotime = Result\ify(
+        // @phpstan-ignore-next-line 🙈 `callable(mixed...)` rejects `Closure(string, int|null=)` (https://github.com/phpstan/phpstan/issues/6873)
+        \strtotime(...),
+        exceptionClass: \RuntimeException::class,
+        toErr: static fn (int|false $t): Option => $t === false ? Option\some('invalid date') : Option\none(),
+    );
+
+    return $strtotime('2015-09-21 UTC midnight');
+}
+
+/**
+ * @throws \Throwable
+ */
+function test_to_err_unwrap_err_type(): string
+{
+    $result = Result\trap(
+        static fn (): int => \random_int(min: 0, max: 10),
+        exceptionClass: \RuntimeException::class,
+        toErr: static fn (int $i): Option => $i > 5 ? Option\some('too big') : Option\none(),
+    );
+
+    if ($result->isOk()) {
+        return 'ok';
+    }
+
+    // 🫥 psalm: blind spot — misses that the error is `RuntimeException|string`, not `string` (phpstan & mago both flag it)
+    // @mago-expect analysis:invalid-return-statement 🎯
+    // @phpstan-ignore-next-line 🎯 should return string but returns RuntimeException|string.
+    return $result->unwrapErr();
+}
+
+/**
+ * @throws \Throwable
+ */
+function test_to_err_must_return_an_option(): void
+{
+    /** @psalm-suppress InvalidArgument 🎯 on the `toErr` argument below */
+    // @phpstan-ignore-next-line 🎯 Unable to resolve the template type F in call to function TH\Maybe\Result\trap
+    Result\trap(
+        static fn (): int => \random_int(min: 0, max: 10),
+        // @mago-expect analysis:invalid-argument 🎯
+        // @phpstan-ignore-next-line 🎯 Parameter $toErr of function TH\Maybe\Result\trap expects (callable(int<0, 10>): TH\Maybe\Option<mixed>)|null, Closure(int): (''|'too big') given.
+        toErr: static fn (int $i): string => $i > 5 ? 'too big' : '',
+    );
+}
+
+/**
+ * @throws \Throwable
+ */
+function test_to_err_wrong_parameter_type(): void
+{
+    Result\trap(
+        static fn (): int => \random_int(min: 0, max: 10),
+        // 🫥 psalm: blind spot — accepts a `Closure(string)` for an int result (phpstan & mago both flag it)
+        // @mago-expect analysis:invalid-argument 🎯
+        // @phpstan-ignore-next-line 🎯 Parameter $toErr of function TH\Maybe\Result\trap expects (callable(int<0, 10>): TH\Maybe\Option<string>)|null, Closure(string): TH\Maybe\Option\Some<string> given.
+        toErr: static fn (string $s): Option => Option\some($s),
+    );
+}
+
+/**
+ * @return Result<int,\Exception|string>
+ * @throws \Throwable
+ */
+function test_to_err_default_exception_class(): Result
+{
+    // @mago-ignore analysis:less-specific-return-statement 🙈 mago infers E from its bound (Throwable) instead of the `\Exception::class` default
+    return Result\trap(
+        static fn (): int => \random_int(min: 0, max: 10),
+        toErr: static fn (int $i): Option => $i > 5 ? Option\some('too big') : Option\none(),
+    );
 }

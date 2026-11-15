@@ -4,6 +4,7 @@ namespace TH\Maybe\Tests\Unit\Result;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use TH\Maybe\Option;
 use TH\Maybe\Result;
 use TH\Maybe\Tests\Assert;
 use TH\Maybe\Tests\Provider;
@@ -34,5 +35,13 @@ final class TrapTest extends TestCase
         $this->expectExceptionMessage('Division by zero');
 
         Result\trap(static fn () => \intdiv(num1: 1, num2: 0));
+    }
+
+    public function testTrapWithToErr(): void
+    {
+        $toErr = static fn (int $i): Option => $i > 5 ? Option\some('too big') : Option\none();
+
+        Assert::assertEquals(3, Result\trap(static fn () => 3, toErr: $toErr)->unwrap());
+        Assert::assertEquals('too big', Result\trap(static fn () => 6, toErr: $toErr)->unwrapErr());
     }
 }

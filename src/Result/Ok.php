@@ -209,9 +209,6 @@ class Ok implements Result
     {
         $this->used();
 
-        // @mago-ignore analysis:redundant-docblock-type -- intentional: the @var docblock narrows self<T> to self<U>
-
-        /** @var self<U> */
         return Result\ok($callback($this->value));
     }
 
@@ -246,9 +243,6 @@ class Ok implements Result
     {
         $this->used();
 
-        // @mago-ignore analysis:redundant-docblock-type -- the @var docblock narrows Option<T> to Some<T>
-
-        /** @var Option\Some<T> */
         return Option\some($this->value);
     }
 

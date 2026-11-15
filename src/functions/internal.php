@@ -21,3 +21,15 @@ function isOfAnyClass(object $value, iterable $classes): bool
 
     return false;
 }
+
+/**
+ * Throws if both `$noneValue` and `$isSome` are given: they are mutually exclusive.
+ *
+ * @throws \InvalidArgumentException
+ */
+function assertNoneValueOrIsSome(mixed $noneValue, ?callable $isSome): void
+{
+    if ($isSome !== null && $noneValue !== null) {
+        throw new \InvalidArgumentException('$noneValue and $isSome cannot be used together');
+    }
+}
