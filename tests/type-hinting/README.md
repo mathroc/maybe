@@ -20,15 +20,15 @@ false positives at a glance:
   disappears, so stale suppressions surface.
 - 🫥 **blind spot** — a tool doesn't report an issue. Usually this is
   noticed because its siblings catch it on the same line, but that is
-  not a requirement: config-level suppressions (e.g. psalm.xml mutes
-  `MissingThrowsDocblock` for `tests/`) can hide what a tool would
+  not a requirement: config-level suppressions (e.g. an issue
+  handler in psalm.xml) can hide what a tool would
   otherwise catch, and it can happen that no tool in the suite detects
   the issue at all. Always noted on its own comment line, naming the
   tool that is blind and why.
 
 Comment order for multiple suppressions on one code line: the 🫥 note
 lines first, then `@mago-expect`/`@mago-ignore`, then the
-`@psalm-suppress` docblock, then `@phpstan-ignore` / `@phpcs:ignore`
+`@psalm-suppress` docblock, then `@phpstan-ignore`
 directly above the code.
 
 To find out what a given tool actually reports on a line, strip the

@@ -147,8 +147,7 @@ final class Some implements Option
             // @mago-expect analysis:mixed-operand -- `contains()` compares a template value against mixed
             // @mago-expect analysis:possibly-null-operand
             // @mago-expect lint:identity-comparison
-            // @phpcs:ignore SlevomatCodingStandard.Operators.DisallowEqualOperators
-            : $this->value == $value; // @phpstan-ignore equal.notAllowed
+            : $this->value == $value;
     }
 
     public function filter(callable $predicate): Option
@@ -196,7 +195,6 @@ final class Some implements Option
      * @template U
      * @param Option<U> $option
      * @return Option<array{T, U}>
-     * @psalm-suppress InvalidReturnType
      */
     public function zip(Option $option): Option
     {
