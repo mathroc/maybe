@@ -65,18 +65,18 @@ final class OfTest extends TestCase
         $this->expectException(\DivisionByZeroError::class);
         $this->expectExceptionMessage('Division by zero');
 
-        Option\tryOf(static fn () => 1 / 0);
+        Option\tryOf(static fn () => \intdiv(num1: 1, num2: 0));
     }
 
     public function testTryOfExceptionsWithExpectedClass(): void
     {
         Assert::assertEquals(
             Option\none(),
-            Option\tryOf(static fn () => 1 / 0, exceptionClass: \ArithmeticError::class),
+            Option\tryOf(static fn () => \intdiv(num1: 1, num2: 0), exceptionClass: \ArithmeticError::class),
         );
         Assert::assertEquals(
             Option\none(),
-            Option\tryOf(static fn () => 1 / 0, exceptionClass: [\LogicException::class, \ArithmeticError::class]),
+            Option\tryOf(static fn () => \intdiv(num1: 1, num2: 0), exceptionClass: [\LogicException::class, \ArithmeticError::class]),
         );
     }
 
@@ -85,7 +85,7 @@ final class OfTest extends TestCase
         $this->expectException(\DivisionByZeroError::class);
         $this->expectExceptionMessage('Division by zero');
 
-        Option\tryOf(static fn () => 1 / 0, exceptionClass: [\LogicException::class, \RuntimeException::class]);
+        Option\tryOf(static fn () => \intdiv(num1: 1, num2: 0), exceptionClass: [\LogicException::class, \RuntimeException::class]);
     }
 
     public function testTryOfExceptionsOutsideExpectedClassArePropagated(): void
@@ -93,6 +93,6 @@ final class OfTest extends TestCase
         $this->expectException(\DivisionByZeroError::class);
         $this->expectExceptionMessage('Division by zero');
 
-        Option\tryOf(static fn () => 1 / 0, exceptionClass: \LogicException::class);
+        Option\tryOf(static fn () => \intdiv(num1: 1, num2: 0), exceptionClass: \LogicException::class);
     }
 }

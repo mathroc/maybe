@@ -15,11 +15,13 @@ final class IsTest extends TestCase
     #[DataProvider('values')]
     public function testIsOk(mixed $value): void
     {
+        /** @var Result<mixed, mixed> $result */
         $result = Result\ok($value);
 
         Assert::assertTrue($result->isOk());
         Assert::assertResultUsed($result);
 
+        /** @var Result<mixed, mixed> $result */
         $result = Result\err($value);
 
         Assert::assertFalse($result->isOk());
@@ -29,11 +31,13 @@ final class IsTest extends TestCase
     #[DataProvider('values')]
     public function testIsErr(mixed $value): void
     {
+        /** @var Result<mixed, mixed> $result */
         $result = Result\ok($value);
 
         Assert::assertFalse($result->isErr());
         Assert::assertResultUsed($result);
 
+        /** @var Result<mixed, mixed> $result */
         $result = Result\err($value);
 
         Assert::assertTrue($result->isErr());
@@ -43,12 +47,14 @@ final class IsTest extends TestCase
     #[DataProvider('values')]
     public function testIsOkAnd(mixed $value): void
     {
+        /** @var Result<mixed, mixed> $result */
         $result = Result\ok($value);
 
-        Assert::assertTrue($result->isOkAnd(static fn (mixed $v) => $v === $value));
         Assert::assertFalse($result->isOkAnd(static fn (mixed $v) => $v !== $value));
+        Assert::assertTrue($result->isOkAnd(static fn (mixed $v) => $v === $value));
         Assert::assertResultUsed($result);
 
+        /** @var Result<mixed, mixed> $result */
         $result = Result\err($value);
 
         Assert::assertFalse($result->isOkAnd(static fn (mixed $v) => Assert::fail('predicate should be called')));
@@ -59,16 +65,18 @@ final class IsTest extends TestCase
     #[DataProvider('values')]
     public function testIsErrAnd(mixed $value): void
     {
+        /** @var Result<mixed, mixed> $result */
         $result = Result\ok($value);
 
         Assert::assertFalse($result->isErrAnd(static fn (mixed $v) => Assert::fail('predicate should be called')));
         Assert::assertFalse($result->isErrAnd(static fn (mixed $v) => Assert::fail('predicate should be called')));
         Assert::assertResultUsed($result);
 
+        /** @var Result<mixed, mixed> $result */
         $result = Result\err($value);
 
-        Assert::assertTrue($result->isErrAnd(static fn (mixed $v) => $v === $value));
         Assert::assertFalse($result->isErrAnd(static fn (mixed $v) => $v !== $value));
+        Assert::assertTrue($result->isErrAnd(static fn (mixed $v) => $v === $value));
         Assert::assertResultUsed($result);
     }
 }

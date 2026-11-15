@@ -24,7 +24,7 @@ final class ContainsTest extends TestCase
     }
 
     /**
-     * @return iterable<array{0:Option<mixed>, 1:mixed, 2:bool}>
+     * @return iterable<array{0:Option<mixed>, 1:mixed, 2:bool, 3?:bool}>
      */
     public static function containsMatrix(): iterable
     {

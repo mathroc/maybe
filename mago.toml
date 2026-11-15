@@ -42,7 +42,6 @@ function-name = { camel = true, exclude = ["tests/type-hinting"] }
 
 [analyzer]
 plugins = []
-baseline = "mago-analyzer-baseline.toml"
 analyze-dead-code = true
 check-throws = true
 ignore = [

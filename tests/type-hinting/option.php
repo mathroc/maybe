@@ -85,7 +85,6 @@ function test_instanceof_some(Option $option): int
 {
     if ($option instanceof Option\Some) {
         // 🫥 phpstan & mago: blind spot — they miss the RedundantCondition psalm catches (Some<int>&Option<int> is always Some<int>)
-        // @mago-ignore analysis:mixed-return-statement 🙈 mago cannot bind Some's template T through the Option<int>&Some intersection (psalm resolves int via unwrap()'s @return T)
         /**
          * @psalm-suppress MissingThrowsDocblock 🙈 https://github.com/vimeo/psalm/issues/2912
          * @psalm-suppress RedundantCondition 🎯
@@ -125,7 +124,6 @@ function test_call_a_function_with_none(): void
 
 function test_call_a_function_with_some(): void
 {
-    // @mago-ignore analysis:possibly-invalid-argument 🙈 mago does not widen literal Some<int(1)> to Option<int>
     here\test_is_none(Option\some(1));
 
     // @mago-expect analysis:possibly-invalid-argument 🎯

@@ -63,8 +63,8 @@ use TH\Maybe\Tests\Helpers\IgnoreUnusedResults;
  *
  * Note: some methods return another `Result` that must also be used.
  *
- * @template T
- * @template E
+ * @template-covariant T
+ * @template-covariant E
  * @immutable
  * @extends \IteratorAggregate<T>
  */

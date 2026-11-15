@@ -24,7 +24,6 @@ final class FlattenTest extends TestCase
      */
     public static function flattenMatrix(): iterable
     {
-        /** @var Option<mixed> $none */
         $none = Option\none();
 
         yield 'none' => [$none, $none];

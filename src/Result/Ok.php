@@ -6,7 +6,7 @@ use TH\Maybe\Option;
 use TH\Maybe\Result;
 
 /**
- * @template T
+ * @template-covariant T
  * @implements Result<T, never>
  * @nodoc
  */

@@ -24,7 +24,7 @@ final class ConvertToOptionTest extends TestCase
     }
 
     /**
-     * @return iterable<array{Option<mixed>, mixed, Result<mixed, mixed>, int}>
+     * @return iterable<array{Result<mixed, mixed>, Option<mixed>}>
      */
     public static function okMatrix(): iterable
     {
@@ -50,7 +50,7 @@ final class ConvertToOptionTest extends TestCase
     }
 
     /**
-     * @return iterable<array{Option<mixed>, mixed, Result<mixed, mixed>, int}>
+     * @return iterable<array{Result<mixed, mixed>, Option<mixed>}>
      */
     public static function errMatrix(): iterable
     {

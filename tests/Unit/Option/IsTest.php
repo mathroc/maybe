@@ -15,10 +15,12 @@ final class IsTest extends TestCase
     #[DataProvider('values')]
     public function testIsSome(mixed $value): void
     {
+        /** @var Option<mixed> $option */
         $option = Option\some($value);
 
         Assert::assertTrue($option->isSome());
 
+        /** @var Option<mixed> $option */
         $option = Option\none();
 
         Assert::assertFalse($option->isSome());
@@ -27,10 +29,12 @@ final class IsTest extends TestCase
     #[DataProvider('values')]
     public function testIsNone(mixed $value): void
     {
+        /** @var Option<mixed> $option */
         $option = Option\some($value);
 
         Assert::assertFalse($option->isNone());
 
+        /** @var Option<mixed> $option */
         $option = Option\none();
 
         Assert::assertTrue($option->isNone());
@@ -39,11 +43,13 @@ final class IsTest extends TestCase
     #[DataProvider('values')]
     public function testIsSomeAnd(mixed $value): void
     {
+        /** @var Option<mixed> $option */
         $option = Option\some($value);
 
-        Assert::assertTrue($option->isSomeAnd(static fn (mixed $v) => $v === $value));
         Assert::assertFalse($option->isSomeAnd(static fn (mixed $v) => $v !== $value));
+        Assert::assertTrue($option->isSomeAnd(static fn (mixed $v) => $v === $value));
 
+        /** @var Option<mixed> $option */
         $option = Option\none();
 
         Assert::assertFalse($option->isSomeAnd(static fn (mixed $v) => Assert::fail('predicate should be called')));
@@ -53,11 +59,13 @@ final class IsTest extends TestCase
     #[DataProvider('values')]
     public function testIsNoneOr(mixed $value): void
     {
+        /** @var Option<mixed> $option */
         $option = Option\some($value);
 
         Assert::assertTrue($option->isNoneOr(static fn (mixed $v) => $v === $value));
         Assert::assertFalse($option->isNoneOr(static fn (mixed $v) => $v !== $value));
 
+        /** @var Option<mixed> $option */
         $option = Option\none();
 
         Assert::assertTrue($option->isNoneOr(static fn () => true));

@@ -28,9 +28,9 @@ function test_generic_type(Result $result): int
         return $result->unwrap();
     }
 
+    // @mago-expect analysis:impossible-type-comparison 🎯 `$result` of type `Ok<string>` can never be `Err`
+    // @mago-expect analysis:never-return 🎯
     /** @psalm-suppress NoValue 🎯 This function or method call never returns output */
-    // 🫥 mago: blind spot — mago's dead-code analysis is purely control-flow based (the implicit else falls through), so it cannot see
-    // that unwrapErr() returns never here; psalm & phpstan flag it via type narrowing
     // @phpstan-ignore-next-line 🎯 Unreachable statement - code above always terminates.
     return $result->unwrapErr();
 }
@@ -45,9 +45,11 @@ function test_is_ok(Result $result): int
         return $result->unwrap();
     }
 
+    // 🫥 phpstan: blind spot — reports nothing here (mago flags the dead return, psalm the undocumented throw)
+    // 🫥 mago: blind spot — unhandled-thrown-type is ignored for tests/ in mago.toml, so it misses the undocumented throw psalm catches
+    // @mago-expect analysis:impossible-type-comparison 🎯 `$result` of type `Err<int>` can never be `Ok`
+    // @mago-expect analysis:never-return 🎯
     /**
-     * 🫥 phpstan & mago: blind spot — neither detects the undocumented throw that psalm catches (unwrap() on a narrowed Err always throws)
-     *
      * @psalm-suppress MissingThrowsDocblock 🎯 Throwable is thrown but not caught - please either catch or add a @throws annotation */
     return $result->unwrap();
 }
@@ -58,7 +60,7 @@ function test_is_ok(Result $result): int
 function test_is_none(Result $result): string
 {
     if ($result->isErr()) {
-        // @mago-ignore analysis:invalid-return-statement 🙈 mago does not narrow via isErr(), sees unwrapErr() as int|string
+        // @mago-ignore analysis:mixed-return-statement 🙈 mago loses E when narrowing via isErr(), sees unwrapErr() as mixed
         /** @psalm-suppress MissingThrowsDocblock 🙈 Throwable is thrown but not caught - please either catch or add a @throws annotation */
         return $result->unwrapErr();
     }

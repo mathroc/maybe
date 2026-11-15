@@ -33,6 +33,6 @@ final class TrapTest extends TestCase
         $this->expectException(\DivisionByZeroError::class);
         $this->expectExceptionMessage('Division by zero');
 
-        Result\trap(static fn () => 1 / 0);
+        Result\trap(static fn () => \intdiv(num1: 1, num2: 0));
     }
 }

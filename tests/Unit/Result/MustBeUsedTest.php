@@ -19,9 +19,9 @@ final class MustBeUsedTest extends TestCase
     {
         $this->expectException(UnusedResultException::class);
 
-        (static function (callable $factory): void {
+        (static function () use ($factory): void {
             $factory();
-        })($factory);
+        })();
     }
 
     /**
@@ -30,7 +30,7 @@ final class MustBeUsedTest extends TestCase
     #[DataProvider('resultsFactory')]
     public function testNotUsingAResultThrowAnExceptionWithTheCreationTraceAsPrevious(callable $factory): void
     {
-        (static function (callable $factory): void {
+        (static function () use ($factory): void {
             try {
                 $factory();
             } catch (UnusedResultException $exception) {
@@ -38,7 +38,7 @@ final class MustBeUsedTest extends TestCase
                 Assert::assertInstanceOf(ResultCreationTrace::class, $exception->getPrevious());
                 Assert::assertSame('Result must be used. Created', $exception->getPrevious()->getMessage());
             }
-        })($factory);
+        })();
     }
 
     /**
@@ -47,10 +47,10 @@ final class MustBeUsedTest extends TestCase
     #[DataProvider('resultsFactory')]
     public function testUsingAResultAvoidTheExceptionWhenFreed(callable $factory): void
     {
-        (static function (callable $factory): void {
+        (static function () use ($factory): void {
             $result = $factory();
             Assert::assertNull($result->unwrapOr(null));
-        })($factory);
+        })();
     }
 
     /**
@@ -61,13 +61,12 @@ final class MustBeUsedTest extends TestCase
     {
         $this->expectException(UnusedResultException::class);
 
-        (static function (callable $factory): void {
-            /** @var callable(): Result<mixed, mixed> $factory */
+        (static function () use ($factory): void {
             $result = $factory();
             Assert::assertNull($result->unwrapOr(null));
 
             clone $result;
-        })($factory);
+        })();
     }
 
     /**
@@ -80,7 +79,7 @@ final class MustBeUsedTest extends TestCase
         $this->expectException(\LogicException::class);
         $this->expectExceptionMessage('Object not registered to be used');
 
-        (static function (callable $factory): void {
+        (static function () use ($factory): void {
             $result = $factory();
             Assert::assertNull($result->unwrapOr(null));
 
@@ -94,7 +93,7 @@ final class MustBeUsedTest extends TestCase
             $reapers->offsetUnset($result);
 
             $result->unwrapOr(null);
-        })($factory);
+        })();
     }
 
     /**
@@ -109,7 +108,6 @@ final class MustBeUsedTest extends TestCase
         $this->expectException(\LogicException::class);
         $this->expectExceptionMessage('Object already register to be used');
 
-        // @mago-ignore analysis:no-value -- mago infers `never` for Ok::unwrap() from its exact return-type template
         $used = new \ReflectionMethod(Result\Ok::class, 'mustBeUsed');
         $used->invoke($result);
     }
@@ -120,12 +118,12 @@ final class MustBeUsedTest extends TestCase
     #[DataProvider('resultsFactory')]
     public function testAnUnserializedResultDontHaveToBeUsed(callable $factory): void
     {
-        (static function (callable $factory): void {
+        (static function () use ($factory): void {
             $result = $factory();
             Assert::assertNull($result->unwrapOr(null));
 
             \unserialize(\serialize($result));
-        })($factory);
+        })();
     }
 
     /**
