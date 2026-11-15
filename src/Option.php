@@ -44,7 +44,7 @@ use TH\Maybe\Tests\Helpers\IgnoreUnusedResults;
  * // @prints Result: 0.66666666666667
  * ```
  *
- * @template T
+ * @template-covariant T
  * @extends \IteratorAggregate<T>
  * @immutable
  */

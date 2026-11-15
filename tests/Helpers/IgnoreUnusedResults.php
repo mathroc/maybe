@@ -21,9 +21,7 @@ final class IgnoreUnusedResults implements CustomAssertions
 {
     public function assertion(Call $call, \Closure $next): void
     {
-        foreach ($call->arguments as $argument) {
-            $this->forgetReapers($argument);
-        }
+        \array_map($this->forgetReapers(...), $call->arguments);
 
         $next();
     }

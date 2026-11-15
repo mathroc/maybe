@@ -90,9 +90,6 @@ final class BooleanTest extends TestCase
     public function testOrElse(Result $left, Result $right, Result $expected): void
     {
         $calls = 0;
-        $expectedCalls = $left instanceof Result\Err
-            ? 1
-            : 0;
 
         Assert::assertEquals(
             $expected,
@@ -102,6 +99,10 @@ final class BooleanTest extends TestCase
                 return $right;
             }),
         );
+
+        $expectedCalls = $left instanceof Result\Err
+            ? 1
+            : 0;
 
         // @mago-expect lint:no-else-clause -- kept symmetric with the sibling tests below
         if ($left instanceof Result\Err) {

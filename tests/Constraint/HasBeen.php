@@ -36,9 +36,11 @@ final class HasBeen extends Constraint
     {
         $ro = new \ReflectionObject($result);
 
-        /** @throws void */
+        /**
+         * @throws void
+         * @var \WeakMap<T,Reaper> $reapers
+         */
         $reapers = $ro->getMethod('reapers')->invoke(null);
-        /** @var \WeakMap<T,Reaper> $reapers */
         $reaper = $reapers[$result];
 
         $ro = new \ReflectionObject($reaper);
@@ -46,11 +48,6 @@ final class HasBeen extends Constraint
         /** @throws void */
         $rp = $ro->getProperty('active');
 
-        $result = $rp->getValue($reaper);
-
-        // @mago-expect lint:assert-description -- internal reflection check needs no failure description
-        \assert(\is_bool($result));
-
-        return $result;
+        return $rp->getValue($reaper) === true;
     }
 }

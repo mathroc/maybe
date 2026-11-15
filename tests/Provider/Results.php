@@ -8,9 +8,9 @@ trait Results
 {
     /**
      * @return iterable<string, array{
-     *   left:Result<string, null>,
-     *   right:Result<string, null>,
-     *   expected:Result<string, null>
+     *   left:Result<string, string>,
+     *   right:Result<string, string>,
+     *   expected:Result<string, string>
      * }>
      */
     public static function andMatrix(): iterable
@@ -42,9 +42,9 @@ trait Results
 
     /**
      * @return iterable<string, array{
-     *   left:Result<string, null>,
-     *   right:Result<string, null>,
-     *   expected:Result<string, null>
+     *   left:Result<string, string>,
+     *   right:Result<string, string>,
+     *   expected:Result<string, string>
      * }>
      */
     public static function orMatrix(): iterable

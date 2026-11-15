@@ -2,36 +2,19 @@
 
 namespace TH\Maybe\Tests\Unit\Option;
 
+use PHPUnit\Framework\Assert;
 use PHPUnit\Framework\TestCase;
+use TH\Maybe\Option;
 
 final class FinalTest extends TestCase
 {
-    public function testCannotInstanciateThirdPartyNone(): void
+    public function testNoneCannotBeExtended(): void
     {
-        $this->expectExceptionMessage("Class MyNone cannot extend final class TH\Maybe\Option\None");
-
-        self::markTestSkipped('Probably have to fork to test that this is a fatal error');
-
-        eval("class MyNone extends \TH\Maybe\Option\None {}");
+        Assert::assertTrue((new \ReflectionClass(Option\None::class))->isEnum());
     }
 
-    public function testCannotInstanciateThirdPartySome(): void
+    public function testSomeCannotBeExtended(): void
     {
-        $this->expectExceptionMessage("Class MySome cannot extend final class TH\Maybe\Option\Some");
-
-        self::markTestSkipped('Probably have to fork to test that this is a fatal error');
-
-        eval("class MySome extends \TH\Maybe\Option\Some {}");
-    }
-
-    public function testCannotInstanciateThirdPartyOption(): void
-    {
-        $this->expectExceptionMessage(
-            "Call to private TH\Maybe\Option::__construct() from scope TH\Maybe\Tests\Unit\Option\FinalTest",
-        );
-
-        self::markTestSkipped("Don't know how to prevent that");
-
-        eval("class MyOption implements \TH\Maybe\Option {}");
+        Assert::assertTrue((new \ReflectionClass(Option\Some::class))->isFinal());
     }
 }

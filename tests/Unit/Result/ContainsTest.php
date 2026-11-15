@@ -26,7 +26,7 @@ final class ContainsTest extends TestCase
     }
 
     /**
-     * @return iterable<array{0:Result<mixed, null>, 1:mixed, 2:bool}>
+     * @return iterable<array{0:Result<mixed, null>, 1:mixed, 2:bool, 3?:bool}>
      */
     public static function containsMatrix(): iterable
     {
@@ -89,7 +89,7 @@ final class ContainsTest extends TestCase
     }
 
     /**
-     * @return iterable<array{0:Result<mixed, mixed>, 1:mixed, 2:bool}>
+     * @return iterable<array{0:Result<mixed, mixed>, 1:mixed, 2:bool, 3?:bool}>
      */
     public static function containsErrMatrix(): iterable
     {

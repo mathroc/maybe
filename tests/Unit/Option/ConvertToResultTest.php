@@ -51,7 +51,7 @@ final class ConvertToResultTest extends TestCase
     }
 
     /**
-     * @return iterable<array{Option<mixed>, mixed, Result<mixed, mixed>, int}>
+     * @return iterable<array{Option<mixed>, mixed, Result<mixed, mixed>}>
      */
     public static function okOrMatrix(): iterable
     {

@@ -91,7 +91,6 @@ function trap(callable $callback, array|string $exceptionClass = \Exception::cla
         return Result\ok($callback());
     } catch (\Throwable $th) {
         if (isOfAnyClass($th, (array) $exceptionClass)) {
-            // @mago-ignore analysis:less-specific-nested-return-statement -- mago loses `E` through Result\err()
             return Result\err($th);
         }
 
@@ -124,7 +123,6 @@ function trap(callable $callback, array|string $exceptionClass = \Exception::cla
 #[ExamplesSetup(new IgnoreUnusedResults())]
 function flatten(Result $result): Result
 {
-    // @mago-ignore analysis:less-specific-nested-return-statement -- mago can't match nested templates
     return $result->mapOrElse(static fn (Result $r) => $r, static fn (mixed $err) => Result\err($err));
 }
 
@@ -197,7 +195,6 @@ function collect(iterable $results, bool $drain = false): Result
 
     foreach ($results as $result) {
         if (!$result->isErr()) {
-            // @mago-ignore analysis:unhandled-thrown-type -- unwrap() cannot throw: $result is not Err
             $values[] = $result->unwrap();
 
             continue;
@@ -210,6 +207,5 @@ function collect(iterable $results, bool $drain = false): Result
         }
     }
 
-    // @mago-ignore analysis:less-specific-nested-return-statement -- mago can't bind `E` on the collected values
     return $firstErr ?? Result\ok($values);
 }
