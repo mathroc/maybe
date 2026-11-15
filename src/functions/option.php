@@ -6,6 +6,7 @@ use TH\DocTest\Attributes\ExamplesSetup;
 use TH\Maybe\Option;
 use TH\Maybe\Result;
 use TH\Maybe\Tests\Helpers\IgnoreUnusedResults;
+use function TH\Maybe\Internal\assertNoneValueOrIsSome;
 use function TH\Maybe\Internal\isOfAnyClass;
 
 /**
@@ -30,7 +31,9 @@ function none(): Option\None
 
 /**
  * Transform a value into an `Option`.
- * It will be a `Some` option containing `$value` if `$value` is different from `$noneValue` (default `null`)
+ * It will be a `Some` option containing `$value` if `$value` is different from `$noneValue` (default `null`),
+ * or, when `$isSome` is given, if `$isSome($value)` returns `true` (`$strict` is then ignored).
+ * `$noneValue` and `$isSome` cannot be used together: an `\InvalidArgumentException` is thrown if both are given.
  *
  * # Examples
  *
@@ -39,21 +42,43 @@ function none(): Option\None
  * self::assertEq(Option\fromValue(null), Option\none());
  * ```
  *
+ * Using a predicate:
+ *
+ * ```php
+ * self::assertEq(Option\fromValue(3, isSome: is_int(...)), Option\some(3));
+ * self::assertEq(Option\fromValue(false, isSome: is_int(...)), Option\none());
+ * ```
+ *
+ * `$noneValue` and `$isSome` are mutually exclusive:
+ *
+ * ```php
+ * Option\fromValue(3, noneValue: 0, isSome: is_int(...));
+ * // @throws InvalidArgumentException $noneValue and $isSome cannot be used together
+ * ```
+ *
  * @template U
  * @param U $value
- * @param U $noneValue
- * @return Option<U>
+ * @param (callable(U):bool)|null $isSome
+ * @return ($isSome is null ? Option<U> : ($noneValue is null ? Option<U> : never))
+ * @throws \InvalidArgumentException if both `$noneValue` and `$isSome` are given
  */
-function fromValue(mixed $value, mixed $noneValue = null, bool $strict = true): Option
+function fromValue(mixed $value, mixed $noneValue = null, bool $strict = true, ?callable $isSome = null): Option
 {
+    assertNoneValueOrIsSome($noneValue, $isSome);
+
+    if ($isSome !== null) {
+        return $isSome($value)
+            ? Option\some($value)
+            : Option\none();
+    }
+
     $same = $strict
         ? $value === $noneValue
         // @mago-expect analysis:possibly-null-operand -- left: `$value` may be null, comparing it to `$noneValue` is the point
-        // @mago-expect analysis:possibly-null-operand -- right: `$noneValue` defaults to null
+        // @mago-expect analysis:mixed-operand -- right: `$noneValue` can be anything, loose comparison is the point of `$strict = false`
         // @mago-expect lint:identity-comparison
         : $value == $noneValue;
 
-    /** @var Option<U> */
     return $same
         ? Option\none()
         : Option\some($value);
@@ -61,7 +86,8 @@ function fromValue(mixed $value, mixed $noneValue = null, bool $strict = true): 
 
 /**
  * Execute a callable and transform the result into an `Option`.
- * It will be a `Some` option containing the result if it is different from `$noneValue` (default `null`).
+ * It will be a `Some` option containing the result if it is different from `$noneValue` (default `null`),
+ * or, when `$isSome` is given, if `$isSome($result)` returns `true` (`$noneValue` and `$isSome` cannot be used together).
  *
  * # Examples
  *
@@ -77,19 +103,28 @@ function fromValue(mixed $value, mixed $noneValue = null, bool $strict = true): 
  * self::assertEq(Option\of(fn() => null), Option\none());
  * ```
  *
+ * Using a predicate:
+ *
+ * ```php
+ * self::assertEq(Option\of(fn() => strpos("fruits", "z"), isSome: is_int(...)), Option\none());
+ * ```
+ *
  * @template U
  * @param callable():U $callback
- * @param U $noneValue
- * @return Option<U>
+ * @param (callable(U):bool)|null $isSome
+ * @return ($isSome is null ? Option<U> : ($noneValue is null ? Option<U> : never))
+ * @throws \InvalidArgumentException if both `$noneValue` and `$isSome` are given
  */
-function of(callable $callback, mixed $noneValue = null, bool $strict = true): Option
+function of(callable $callback, mixed $noneValue = null, bool $strict = true, ?callable $isSome = null): Option
 {
-    return Option\fromValue($callback(), $noneValue, $strict);
+    assertNoneValueOrIsSome($noneValue, $isSome);
+
+    return Option\fromValue($callback(), $noneValue, $strict, $isSome);
 }
 
 /**
  * Execute a callable and transform the result into an `Option` as `Option\of()` does
- * but also return `Option\None` if it an exception matching $exceptionClass was thrown.
+ * but also return `Option\None` if an exception matching `$exceptionClass` was thrown.
  *
  * # Examples
  *
@@ -121,9 +156,10 @@ function of(callable $callback, mixed $noneValue = null, bool $strict = true): O
  * @template U
  * @template E of \Throwable
  * @param callable():U $callback
- * @param U $noneValue
  * @param list<class-string<E>>|class-string<E> $exceptionClass
- * @return Option<U>
+ * @param (callable(U):bool)|null $isSome
+ * @return ($isSome is null ? Option<U> : ($noneValue is null ? Option<U> : never))
+ * @throws \InvalidArgumentException if both `$noneValue` and `$isSome` are given
  * @throws \Throwable
  */
 function tryOf(
@@ -131,9 +167,12 @@ function tryOf(
     mixed $noneValue = null,
     bool $strict = true,
     array|string $exceptionClass = \Exception::class,
+    ?callable $isSome = null,
 ): Option {
+    assertNoneValueOrIsSome($noneValue, $isSome);
+
     try {
-        return Option\of($callback, $noneValue, $strict);
+        return Option\of($callback, $noneValue, $strict, $isSome);
     } catch (\Throwable $th) {
         if (isOfAnyClass($th, (array) $exceptionClass)) {
             return Option\none();
@@ -141,6 +180,139 @@ function tryOf(
 
         throw $th;
     }
+}
+
+/**
+ * Wrap a callable into one that transforms its result into an `Option`.
+ * It will be a `Some` option containing the result if it is different from `$noneValue` (default `null`),
+ * or, when `$isSome` is given, if `$isSome($result)` returns `true` (`$noneValue` and `$isSome` cannot be used together).
+ *
+ * # Examples
+ *
+ * Successful execution:
+ *
+ * ```php
+ * self::assertEq(Option\ify(strtolower(...))("FRUITS"), Option\some("fruits"));
+ * ```
+ *
+ * Conversion of `null` to `Option\None`:
+ *
+ * ```php
+ * self::assertEq(Option\ify(fn() => null)(), Option\none());
+ * ```
+ *
+ * Option-ify `strpos()`:
+ *
+ * ```php
+ * $strpos = Option\ify(strpos(...), isSome: is_int(...));
+ *
+ * self::assertEq($strpos("fruits", "u"), Option\some(2));
+ * self::assertEq($strpos("fruits", "z"), Option\none());
+ * ```
+ *
+ * @template U
+ * @param callable(mixed...):U $callback
+ * @param (callable(U):bool)|null $isSome
+ * @return ($isSome is null ? \Closure(mixed...):Option<U> : ($noneValue is null ? \Closure(mixed...):Option<U> : never))
+ * @throws \InvalidArgumentException if both `$noneValue` and `$isSome` are given
+ */
+function ify(callable $callback, mixed $noneValue = null, bool $strict = true, ?callable $isSome = null): \Closure
+{
+    assertNoneValueOrIsSome($noneValue, $isSome);
+
+    // Pick the conversion once here rather than on every call of the returned closure.
+    if ($isSome !== null) {
+        return static function (mixed ...$args) use ($callback, $isSome): Option {
+            $value = $callback(...$args);
+
+            return $isSome($value)
+                ? Option\some($value)
+                : Option\none();
+        };
+    }
+
+    if ($strict) {
+        return static function (mixed ...$args) use ($callback, $noneValue): Option {
+            $value = $callback(...$args);
+
+            return $value === $noneValue
+                ? Option\none()
+                : Option\some($value);
+        };
+    }
+
+    return static function (mixed ...$args) use ($callback, $noneValue): Option {
+        $value = $callback(...$args);
+
+        // @mago-expect analysis:possibly-null-operand -- left: `$value` may be null, comparing it to `$noneValue` is the point
+        // @mago-expect analysis:mixed-operand -- loose comparison is the point of `$strict = false`
+        // @mago-expect lint:identity-comparison
+        return $value == $noneValue
+            ? Option\none()
+            : Option\some($value);
+    };
+}
+
+/**
+ * Wrap a callable into one that transforms its result into an `Option` like `Option\ify()` does
+ * but also return `Option\None` if an exception matching `$exceptionClass` was thrown.
+ *
+ * # Examples
+ *
+ * Successful execution:
+ *
+ * ```php
+ * self::assertEq(Option\tryIfy(strtolower(...))("FRUITS"), Option\some("fruits"));
+ * ```
+ *
+ * Conversion of `null` to `Option\None`:
+ *
+ * ```php
+ * self::assertEq(Option\tryIfy(fn() => null)(), Option\none());
+ * ```
+ *
+ * Checked Exception:
+ *
+ * ```php
+ * self::assertEq(Option\tryIfy(fn () => new \DateTimeImmutable("nope"))(), Option\none());
+ * ```
+ *
+ * Unchecked Exception:
+ *
+ * ```php
+ * self::assertEq(Option\tryIfy(fn () => 1 / 0)(), Option\none());
+ * // @throws DivisionByZeroError Division by zero
+ * ```
+ *
+ * @template U
+ * @template E of \Throwable
+ * @param callable(mixed...):U $callback
+ * @param list<class-string<E>>|class-string<E> $exceptionClass
+ * @param (callable(U):bool)|null $isSome
+ * @return ($isSome is null ? \Closure(mixed...):Option<U> : ($noneValue is null ? \Closure(mixed...):Option<U> : never))
+ * @throws \InvalidArgumentException if both `$noneValue` and `$isSome` are given
+ */
+function tryIfy(
+    callable $callback,
+    mixed $noneValue = null,
+    bool $strict = true,
+    array|string $exceptionClass = \Exception::class,
+    ?callable $isSome = null,
+): \Closure {
+    $ify = Option\ify($callback, $noneValue, $strict, $isSome);
+
+    return static function (mixed ...$args) use ($ify, $exceptionClass): Option {
+        try {
+            return $ify(...$args);
+        } catch (\Throwable $th) {
+            if (isOfAnyClass($th, (array) $exceptionClass)) {
+                return Option\none();
+            }
+
+            // @mago-ignore analysis:unhandled-thrown-type -- rethrowing exceptions not in $exceptionClass is the point
+            throw $th;
+        }
+    };
 }
 
 /**
@@ -185,7 +357,6 @@ function flatten(Option $option): Option
  */
 function unzip(Option $option): array
 {
-    /** @var array{Option<U>, Option<V>} */
     return $option->mapOrElse(static fn (array $a): array => [
         Option\some($a[0]),
         Option\some($a[1]),
@@ -214,7 +385,6 @@ function unzip(Option $option): array
 #[ExamplesSetup(new IgnoreUnusedResults())]
 function transpose(Option $option): Result
 {
-    /** @var Result<Option<U>, E> */
     return $option->mapOrElse(
         static fn (Result $result) => $result->map(Option\some(...)),
         static fn () => Result\ok(Option\none()),
@@ -241,7 +411,6 @@ function transpose(Option $option): Result
  */
 function collect(iterable $options): Option
 {
-    /** @var list<U> $values */
     $values = [];
 
     foreach ($options as $option) {

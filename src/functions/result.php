@@ -50,7 +50,10 @@ function err(mixed $value): Result\Err
 /**
  * Execute a callable and transform the result into an `Result`.
  * It will be a `Result\Ok` containing the result or, if it threw an exception
- * matching $exceptionClass, a `Result\Err` containing the exception.
+ * matching `$exceptionClass`, a `Result\Err` containing the exception.
+ *
+ * When `$toErr` is given, it is called with the result: if it returns `Option\Some`,
+ * a `Result\Err` containing its value is returned instead.
  *
  * # Examples
  *
@@ -76,19 +79,32 @@ function err(mixed $value): Result\Err
  * // @throws DivisionByZeroError Division by zero
  * ```
  *
+ * Returned value converted to an error:
+ *
+ * ```php
+ * use TH\Maybe\Option;
+ *
+ * $x = Result\trap(
+ *     fn () => strtotime("nope"),
+ *     toErr: fn ($t) => $t === false ? Option\some("invalid date") : Option\none(),
+ * );
+ * self::assertEq(Result\err("invalid date"), $x);
+ * ```
+ *
  * @template U
  * @template E of \Throwable
+ * @template F
  * @param callable(mixed...):U $callback
  * @param list<class-string<E>>|class-string<E> $exceptionClass
- * @return Result<U,E>
+ * @param (callable(U):Option<F>)|null $toErr
+ * @return Result<U,E|F>
  * @throws \Throwable
  */
 #[ExamplesSetup(new IgnoreUnusedResults())]
-function trap(callable $callback, array|string $exceptionClass = \Exception::class): Result
+function trap(callable $callback, array|string $exceptionClass = \Exception::class, ?callable $toErr = null): Result
 {
     try {
-        /** @var Result<U,E> */
-        return Result\ok($callback());
+        $value = $callback();
     } catch (\Throwable $th) {
         if (isOfAnyClass($th, (array) $exceptionClass)) {
             return Result\err($th);
@@ -96,6 +112,82 @@ function trap(callable $callback, array|string $exceptionClass = \Exception::cla
 
         throw $th;
     }
+
+    if ($toErr !== null) {
+        $err = $toErr($value);
+
+        if ($err instanceof Option\Some) {
+            return Result\err($err->unwrap());
+        }
+    }
+
+    return Result\ok($value);
+}
+
+/**
+ * Wrap a callable into one that transforms its returned value or thrown exception
+ * into a `Result` like `Result\trap()` does (including `$toErr`), but without executing it.
+ *
+ * # Examples
+ *
+ * Successful execution:
+ *
+ * ```php
+ * self::assertEq(Result\ok(3), Result\ify(fn () => 3)());
+ * ```
+ *
+ * Checked exception:
+ *
+ * ```php
+ * $x = Result\ify(fn () => new \DateTimeImmutable("2020-30-30 UTC"))();
+ * self::assertTrue($x->isErr());
+ * $x->unwrap();
+ * // @throws Exception Failed to parse time string (2020-30-30 UTC) at position 6 (0): Unexpected character
+ * ```
+ *
+ * Unchecked exception:
+ *
+ * ```php
+ * Result\ify(fn () => 1/0)();
+ * // @throws DivisionByZeroError Division by zero
+ * ```
+ *
+ * Result-ify `strtotime()`:
+ *
+ * ```php
+ * use TH\Maybe\Option;
+ *
+ * $strtotime = Result\ify(
+ *     strtotime(...),
+ *     toErr: fn ($t) => $t === false
+ *         ? Option\some(new \RuntimeException("Could not convert string to time"))
+ *         : Option\none(),
+ * );
+ *
+ * self::assertEq($strtotime("2015-09-21 UTC midnight")->unwrap(), 1442793600);
+ *
+ * $r = $strtotime("nope");
+ * self::assertTrue($r->isErr());
+ * $r->unwrap(); // @throws RuntimeException Could not convert string to time
+ * ```
+ *
+ * @template U
+ * @template E of \Throwable
+ * @template F
+ * @param callable(mixed...):U $callback
+ * @param list<class-string<E>>|class-string<E> $exceptionClass
+ * @param (callable(U):Option<F>)|null $toErr
+ * @return \Closure(mixed...):Result<U,E|F>
+ */
+#[ExamplesSetup(new IgnoreUnusedResults())]
+function ify(callable $callback, array|string $exceptionClass = \Exception::class, ?callable $toErr = null): \Closure
+{
+    // @mago-ignore analysis:unhandled-thrown-type -- rethrowing exceptions not in $exceptionClass is the point
+    return static fn (mixed ...$args): Result => Result\trap(
+        static fn () => $callback(...$args),
+        $exceptionClass,
+        $toErr,
+    );
 }
 
 /**
@@ -152,6 +244,7 @@ function flatten(Result $result): Result
 #[ExamplesSetup(new IgnoreUnusedResults())]
 function transpose(Result $result): Option
 {
+    // psalm infers Option<Ok<mixed>>|Some<Result<Option<U>, F>> without this cast
     /** @var Option<Result<U, F>> */
     return $result->mapOrElse(
         static fn (Option $option) => $option->map(Result\ok(...)),
@@ -187,10 +280,8 @@ function transpose(Result $result): Option
 #[ExamplesSetup(new IgnoreUnusedResults())]
 function collect(iterable $results, bool $drain = false): Result
 {
-    /** @var list<U> $values */
     $values = [];
 
-    /** @var Result\Err<E>|null $firstErr */
     $firstErr = null;
 
     foreach ($results as $result) {

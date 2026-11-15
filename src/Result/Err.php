@@ -233,9 +233,6 @@ class Err implements Result
     {
         $this->used();
 
-        // @mago-ignore analysis:redundant-docblock-type -- intentional: the @var docblock narrows self<F> to self<F>
-
-        /** @var self<F> */
         return Result\err($callback($this->value));
     }
 
