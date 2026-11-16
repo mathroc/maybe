@@ -56,10 +56,16 @@ function none(): Option\None
  * // @throws InvalidArgumentException $noneValue and $isSome cannot be used together
  * ```
  *
+ * The returned `Option` type excludes `null` from the value type when `$noneValue` is `null` (the default):
+ * `Option\fromValue($nullableInt)` is an `Option<int>`.
+ *
  * @template U
- * @param U $value
- * @param (callable(U):bool)|null $isSome
- * @return ($isSome is null ? Option<U> : ($noneValue is null ? Option<U> : never))
+ * @param U|null $value
+ * @param (callable(mixed):bool)|null $isSome
+ * @phpstan-param (callable(U|($value is null ? null : never)):bool)|null $isSome
+ * @return ($isSome is null
+ *     ? ($noneValue is null ? Option<U> : Option<U|($value is null ? null : never)>)
+ *     : ($noneValue is null ? Option<U|($value is null ? null : never)> : never))
  * @throws \InvalidArgumentException if both `$noneValue` and `$isSome` are given
  */
 function fromValue(mixed $value, mixed $noneValue = null, bool $strict = true, ?callable $isSome = null): Option

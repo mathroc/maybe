@@ -223,3 +223,65 @@ function test_explicit_null_none_value_and_is_some(): Option
 {
     return Option\fromValue(1, noneValue: null, isSome: \is_int(...));
 }
+
+/**
+ * `null` (the default `$noneValue`) is excluded from the returned Option type.
+ *
+ * @return Option<int>
+ */
+function test_from_value_excludes_null(?int $key): Option
+{
+    return Option\fromValue($key);
+}
+
+/**
+ * Only `null` is excluded by default: `false` is a `Some` value.
+ *
+ * @return Option<int|false>
+ */
+function test_from_value_keeps_false(int|false $line): Option
+{
+    return Option\fromValue($line);
+}
+
+/**
+ * @template T
+ * @param T|null $value
+ * @return Option<T>
+ */
+function test_from_value_generic(mixed $value): Option
+{
+    return Option\fromValue($value);
+}
+
+/**
+ * With a custom `$noneValue`, `null` is a `Some` value.
+ *
+ * @return Option<int>
+ * @psalm-suppress InvalidReturnType 🎯
+ */
+function test_from_value_custom_none_value_keeps_null(?int $key): Option
+{
+    // @mago-expect analysis:invalid-return-statement 🎯
+    /** @psalm-suppress InvalidReturnStatement 🎯 */
+    // @phpstan-ignore-next-line 🎯 Function test_from_value_custom_none_value_keeps_null() should return Option<int> but returns Option<int|null>.
+    return Option\fromValue($key, noneValue: 0);
+}
+
+/**
+ * With `$isSome`, `null` can be a `Some` value.
+ *
+ * @return Option<int|null>
+ */
+function test_from_value_is_some_keeps_null(?int $key): Option
+{
+    return Option\fromValue($key, isSome: static fn (?int $i): bool => $i !== 0);
+}
+
+function test_from_value_is_some_receives_null(?int $key): void
+{
+    // 🫥 psalm: blind spot — `$isSome` is `callable(mixed):bool` for psalm (it cannot parse the conditional `@phpstan-param`), so the `Closure(int)` predicate that may receive `null` goes unnoticed
+    // @mago-expect analysis:invalid-argument 🎯
+    // @phpstan-ignore-next-line 🎯 Parameter $isSome of function TH\Maybe\Option\fromValue expects (callable(int|null): bool)|null, Closure(int): bool given.
+    Option\fromValue($key, isSome: static fn (int $i): bool => $i !== 0);
+}
